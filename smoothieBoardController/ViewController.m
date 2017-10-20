@@ -14,7 +14,6 @@
 @interface ViewController ()<ORSSerialPortDelegate, NSUserNotificationCenterDelegate>
 
 @property (nonatomic, assign) float tempLimit;
-@property (assign) BOOL isRelativeHomeBtnClick;
 @property (nonatomic, strong) ORSSerialPortManager *serialPortManager;
 @property (nonatomic, strong) ORSSerialPort *serialPort;
 @property (nonatomic, strong) NSArray *availableBaudRates;
@@ -104,7 +103,7 @@
         }else if ([self.endStrPop.title isEqualToString:@"CRLF(\\r\\n)"]){
             endString = @"\r\n";
         }
-        [self sendMessage:[NSString stringWithFormat:@"%@,%@",self.sendText.stringValue,endString]];
+        [self sendMessage:[NSString stringWithFormat:@"%@%@",self.sendText.stringValue,endString]];
     }
 }
 
@@ -134,7 +133,11 @@
             NSLog(@"home");
             self.limitDistance.floatValue = self.tempLimit;
             if(self.relativeBtn.state){
-                self.isRelativeHomeBtnClick = YES;
+                [self sendMessage:@"G90\r"];
+                usleep(100000);
+                [self sendMessage:@"G1 X0 Y0 F5000\r"];
+                usleep(100000);
+                [self sendMessage:@"G91\r"];
             }
             else{
                 [self sendMessage:@"G1 X0 Y0 F5000\r"];
@@ -199,21 +202,28 @@
 //send Message
 - (void)sendMessage:(NSString*)message{
     NSLog(@"send:%@",message);
-    [self.receivedDataTextView.textStorage.mutableString appendString:[NSString stringWithFormat:@"send:%@\n",message]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.receivedDataTextView.textStorage.mutableString appendString:[NSString stringWithFormat:@"send:%@\n",message]];
+    });
     //NSString to NSData
     NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
     [self.serialPort sendData:data];
+    
     //check currently position
     [self.serialPort sendData:[@"M114\r" dataUsingEncoding:NSUTF8StringEncoding]];
     [self.receivedDataTextView.textStorage.mutableString appendString:@"send:M114\r\n"];
 }
 
-#pragma mark ORSSerialPortDelegate Methods
 
+#pragma mark ORSSerialPortDelegate Methods
 - (void)serialPortWasOpened:(ORSSerialPort *)serialPort
 {
     self.openCloseButton.title = @"Close";
+    
+    //开启 Button 可用状态
     [self buttonState:YES];
+    
+    //设定当前运动模式
     if (self.absoulteBtn.state) {
         [self sendMessage:@"G90\r"];
     }else{
@@ -224,6 +234,8 @@
 - (void)serialPortWasClosed:(ORSSerialPort *)serialPort
 {
     self.openCloseButton.title = @"Open";
+    
+    //关闭 button 可用状态
     [self buttonState:NO];
 }
 
@@ -249,24 +261,17 @@
     [self.receivedDataTextView.textStorage.mutableString appendString:string];
     [self.receivedDataTextView scrollRangeToVisible:NSMakeRange([[self.receivedDataTextView string] length], 0)];
     [self.receivedDataTextView setNeedsDisplay:YES];
-    
-    if (self.isRelativeHomeBtnClick) {
-        NSLog(@"RelativeHomeBtnClick");
-        NSString *position = string;
-        
-        dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            NSLog(@"%@",position);
-        });
-        self.isRelativeHomeBtnClick = NO;
-    }
 }
 
 - (void)serialPortWasRemovedFromSystem:(nonnull ORSSerialPort *)serialPort {
     // After a serial port is removed from the system, it is invalid and we must discard any references to it
     self.serialPort = nil;
     self.openCloseButton.title = @"Open";
+    
+    //将 Open button 设置为不选中状态
     [self.openCloseButton setState:NSControlStateValueOff];
 }
+
 - (void)serialPort:(ORSSerialPort *)serialPort didEncounterError:(NSError *)error
 {
     NSLog(@"Serial port %@ encountered an error: %@", serialPort, error);
