@@ -14,6 +14,7 @@
 @interface ViewController ()<ORSSerialPortDelegate, NSUserNotificationCenterDelegate>
 
 @property (nonatomic, assign) float tempLimit;
+@property (assign) BOOL isRelativeHomeBtnClick;
 @property (nonatomic, strong) ORSSerialPortManager *serialPortManager;
 @property (nonatomic, strong) ORSSerialPort *serialPort;
 @property (nonatomic, strong) NSArray *availableBaudRates;
@@ -80,7 +81,7 @@
     for (int i = 0; i < ports.count; i++) {
         [self.serialPortsPop addItemWithTitle:[NSString stringWithFormat:@"%@",ports[i]]];
     }
-    [self.serialPortsPop selectItemAtIndex:1];
+//    [self.serialPortsPop selectItemAtIndex:1];
 }
 
 #pragma mark Action functions
@@ -114,7 +115,6 @@
         if ([sender.title isEqualToString:@"Y+"]) {
             NSLog(@"Y+");
             [self move:@"Y"];
-            
         }else if([sender.title isEqualToString:@"Y-"]) {
             NSLog(@"Y-");
             [self move:@"Y-"];
@@ -133,13 +133,19 @@
         }else if([sender.title isEqualToString:@"Home"]) {
             NSLog(@"home");
             self.limitDistance.floatValue = self.tempLimit;
-            [self sendMessage:@"G1 X0 Y0 F5000\r"];
+            if(self.relativeBtn.state){
+                self.isRelativeHomeBtnClick = YES;
+            }
+            else{
+                [self sendMessage:@"G1 X0 Y0 F5000\r"];
+            }
+            
         }
     }
 }
 
 -(void)move:(NSString *)direction{
-    if (self.checkBox.state == 0) {
+    if (!self.checkBox.state) {
         float delay_time = [self.delayTime floatValue];
         float limit = [self.limitDistance floatValue];
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
@@ -156,7 +162,7 @@
     }
     else{
         if ([direction rangeOfString:@"Z"].location != NSNotFound) {
-            [self sendMessage:[NSString stringWithFormat:@"G1 %@%.2f F5000\n",direction,[self.limitDistance floatValue]/5]];
+            [self sendMessage:[NSString stringWithFormat:@"G1 %@%.2f F5000\n",direction,[self.limitDistance floatValue]/2]];
         }
         else
             [self sendMessage:[NSString stringWithFormat:@"G1 %@%f F5000\n",direction,[self.limitDistance floatValue]*20]];
@@ -165,26 +171,26 @@
 - (IBAction)absoulteOrRelativeAddressBtn:(NSButton *)sender {
     
     self.absoulteBtn.state = !self.relativeBtn.state;
-    if (self.tempLimit != 0) {
+    if (self.tempLimit) {
         self.limitDistance.floatValue = self.tempLimit;
     }
     if (self.absoulteBtn.state == YES) {
         self.checkBox.enabled = YES;
-        self.HomeBtn.enabled = YES;
+        //self.HomeBtn.enabled = YES;
         [self sendMessage:@"G90\r"];
     }
     else{
         self.checkBox.state = YES;
         self.checkBox.enabled = NO;
-        self.HomeBtn.enabled = NO;
+        //self.HomeBtn.enabled = NO;
         [self sendMessage:@"G91\r"];
     }
 }
 
 - (IBAction)checkStateBtn:(NSButton *)sender {
     self.delayTime.enabled = !sender.state;
-    if (sender.state == 1) {
-        if (self.tempLimit != 0) {
+    if (sender.state) {
+        if (self.tempLimit) {
             self.limitDistance.floatValue = self.tempLimit;
         }
     }
@@ -244,6 +250,15 @@
     [self.receivedDataTextView scrollRangeToVisible:NSMakeRange([[self.receivedDataTextView string] length], 0)];
     [self.receivedDataTextView setNeedsDisplay:YES];
     
+    if (self.isRelativeHomeBtnClick) {
+        NSLog(@"RelativeHomeBtnClick");
+        NSString *position = string;
+        
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            NSLog(@"%@",position);
+        });
+        self.isRelativeHomeBtnClick = NO;
+    }
 }
 
 - (void)serialPortWasRemovedFromSystem:(nonnull ORSSerialPort *)serialPort {
