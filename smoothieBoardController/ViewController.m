@@ -209,6 +209,8 @@
     NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
     [self.serialPort sendData:data];
     
+    usleep(100000);
+    
     //check currently position
     [self.serialPort sendData:[@"M114\r" dataUsingEncoding:NSUTF8StringEncoding]];
     [self.receivedDataTextView.textStorage.mutableString appendString:@"send:M114\r\n"];
@@ -223,11 +225,18 @@
     //开启 Button 可用状态
     [self buttonState:YES];
     
+    //获取 smoothie board version
+    [self sendMessage:@"version\r"];
+    
     //设定当前运动模式
     if (self.absoulteBtn.state) {
         [self sendMessage:@"G90\r"];
     }else{
         [self sendMessage:@"G91\r"];
+    }
+    
+    if ([self.sendText.stringValue length] > 0) {
+        self.endStrPop.enabled = self.sendMessageBtn.enabled = 1;
     }
 }
 
