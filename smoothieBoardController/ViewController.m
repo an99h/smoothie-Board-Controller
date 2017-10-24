@@ -16,7 +16,6 @@
 @property (nonatomic, assign) float tempLimit;
 @property (nonatomic, strong) ORSSerialPortManager *serialPortManager;
 @property (nonatomic, strong) ORSSerialPort *serialPort;
-@property (nonatomic, strong) NSArray *availableBaudRates;
 @property (unsafe_unretained) IBOutlet NSTextView *receivedDataTextView;
 @property (weak) IBOutlet NSPopUpButton *serialPortsPop;
 @property (weak) IBOutlet NSPopUpButton *serialBoudRatePop;
@@ -142,7 +141,6 @@
             else{
                 [self sendMessage:@"G1 X0 Y0 F5000\r"];
             }
-            
         }
     }
 }
@@ -168,9 +166,10 @@
             [self sendMessage:[NSString stringWithFormat:@"G1 %@%.2f F5000\n",direction,[self.limitDistance floatValue]/2]];
         }
         else
-            [self sendMessage:[NSString stringWithFormat:@"G1 %@%f F5000\n",direction,[self.limitDistance floatValue]*20]];
+            [self sendMessage:[NSString stringWithFormat:@"G1 %@%.4f F5000\n",direction,[self.limitDistance floatValue]*20]];
     }
 }
+
 - (IBAction)absoulteOrRelativeAddressBtn:(NSButton *)sender {
     
     self.absoulteBtn.state = !self.relativeBtn.state;
@@ -179,13 +178,11 @@
     }
     if (self.absoulteBtn.state == YES) {
         self.checkBox.enabled = YES;
-        //self.HomeBtn.enabled = YES;
         [self sendMessage:@"G90\r"];
     }
     else{
         self.checkBox.state = YES;
         self.checkBox.enabled = NO;
-        //self.HomeBtn.enabled = NO;
         [self sendMessage:@"G91\r"];
     }
 }
@@ -274,11 +271,13 @@
 
 - (void)serialPortWasRemovedFromSystem:(nonnull ORSSerialPort *)serialPort {
     // After a serial port is removed from the system, it is invalid and we must discard any references to it
-    self.serialPort = nil;
-    self.openCloseButton.title = @"Open";
     
-    //将 Open button 设置为不选中状态
-    [self.openCloseButton setState:NSControlStateValueOff];
+    if ([serialPort.name isEqualToString:[self.serialPortsPop selectedItem].title]) {
+        self.serialPort = nil;
+        self.openCloseButton.title = @"Open";
+        //将 Open button 设置为不选中状态
+        [self.openCloseButton setState:NSControlStateValueOff];
+    }
 }
 
 - (void)serialPort:(ORSSerialPort *)serialPort didEncounterError:(NSError *)error
