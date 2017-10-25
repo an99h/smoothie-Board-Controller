@@ -85,6 +85,10 @@
 #pragma mark Action functions
 - (IBAction)openOrClosePort:(id)sender
 {
+    if (!self.serialPort.isOpen) {
+        self.serialPort = nil;
+        [self.openCloseButton setState:NSControlStateValueOff];
+    }
     self.serialPort.isOpen ? [self.serialPort close] : [self.serialPort open];
 }
 
@@ -240,7 +244,6 @@
 - (void)serialPortWasClosed:(ORSSerialPort *)serialPort
 {
     self.openCloseButton.title = @"Open";
-    
     //关闭 button 可用状态
     [self buttonState:NO];
 }
