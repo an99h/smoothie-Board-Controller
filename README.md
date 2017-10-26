@@ -12,11 +12,8 @@ Revision History
 
 ### Introduce interface  
 
-![](/Users/angqinghua/Desktop/smoothie board instruction/Snip20171023_1.png)
 
-![](/Users/angqinghua/Desktop/smoothie board instruction/WX20171023-111800@2x.png)  
-
-![](/Users/angqinghua/Desktop/smoothie board instruction/WX20171023-112318@2x.png)
+......
 
 ---
 
@@ -41,7 +38,7 @@ Revision History
 ---
 
 ### Postscript
-[G-Code instructions](http://reprap.org/wiki/G-code)
+[G-Code instructions](http://reprap.org/wiki/G-code)  
 Thanks to [ORSSerialPort](https://github.com/armadsen/ORSSerialPort)
 
 
