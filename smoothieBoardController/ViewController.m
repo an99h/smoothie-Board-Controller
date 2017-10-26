@@ -107,6 +107,7 @@
             endString = @"\r\n";
         }
         [self sendMessage:[NSString stringWithFormat:@"%@%@",self.sendText.stringValue,endString]];
+        self.sendText.stringValue = @"";
     }
 }
 
@@ -239,6 +240,7 @@
     if ([self.sendText.stringValue length] > 0) {
         self.endStrPop.enabled = self.sendMessageBtn.enabled = 1;
     }
+    [self.openCloseButton setState:NSControlStateValueOn];
 }
 
 - (void)serialPortWasClosed:(ORSSerialPort *)serialPort
@@ -246,6 +248,7 @@
     self.openCloseButton.title = @"Open";
     //关闭 button 可用状态
     [self buttonState:NO];
+    [self.openCloseButton setState:NSControlStateValueOff];
 }
 
 - (void)buttonState:(BOOL)state{
