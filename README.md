@@ -38,9 +38,11 @@ Revision History
 ---
 
 ### Postscript
-[G-Code instructions](http://reprap.org/wiki/G-code)  
+G-Code [instructions](http://reprap.org/wiki/G-code)  
 Thanks to [ORSSerialPort](https://github.com/armadsen/ORSSerialPort)
 
+
+[![GitHub License Badge](https://img.shields.io/badge/license-MIT-blue.svg)]
 
 
 
