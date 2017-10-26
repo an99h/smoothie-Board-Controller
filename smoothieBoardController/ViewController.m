@@ -63,7 +63,7 @@
 #if (MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_7)
     [[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
 #endif
-    //Notification of sendText
+    //Notification of sendTextField
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enableSendMessageBtn) name:NSControlTextDidChangeNotification object:nil];
 }
 
@@ -79,7 +79,6 @@
     for (int i = 0; i < ports.count; i++) {
         [self.serialPortsPop addItemWithTitle:[NSString stringWithFormat:@"%@",ports[i]]];
     }
-//    [self.serialPortsPop selectItemAtIndex:1];
 }
 
 #pragma mark Action functions
@@ -96,6 +95,7 @@
     [self serialPortList];
 }
 
+//send G-Code cmds
 - (IBAction)sendMessageBtn:(NSButton *)sender {
     if ([self.sendText.stringValue length] > 0) {
         NSString *endString = @"";
@@ -136,6 +136,7 @@
         }else if([sender.title isEqualToString:@"Home"]) {
             NSLog(@"home");
             self.limitDistance.floatValue = self.tempLimit;
+            //check work mode
             if(self.relativeBtn.state){
                 [self sendMessage:@"G90\r"];
                 usleep(100000);
@@ -155,13 +156,16 @@
         float delay_time = [self.delayTime floatValue];
         float limit = [self.limitDistance floatValue];
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            //current don't need
             for (int i = 20; i <= 20*limit; i = i+20) {
                 //send message
                 [self sendMessage:[NSString stringWithFormat:@"G1 %@%d F5000\n",direction,i]];
                 [[NSOperationQueue mainQueue] addOperationWithBlock:^{
                     self.limitDistance.stringValue = [NSString stringWithFormat:@"%d/%.1f",i/20,limit];
                     //collection data
+                    //...
                 }];
+                //sleep
                 [NSThread sleepForTimeInterval:delay_time];
             }
         });
@@ -224,13 +228,13 @@
 {
     self.openCloseButton.title = @"Close";
     
-    //开启 Button 可用状态
+    //open Button enable mode
     [self buttonState:YES];
     
-    //获取 smoothie board version
+    //get smoothie board version
     [self sendMessage:@"version\r"];
     
-    //设定当前运动模式
+    //set work mode
     if (self.absoulteBtn.state) {
         [self sendMessage:@"G90\r"];
     }else{
@@ -246,11 +250,12 @@
 - (void)serialPortWasClosed:(ORSSerialPort *)serialPort
 {
     self.openCloseButton.title = @"Open";
-    //关闭 button 可用状态
+    //colse button enable
     [self buttonState:NO];
     [self.openCloseButton setState:NSControlStateValueOff];
 }
 
+//button state setting
 - (void)buttonState:(BOOL)state{
     self.serialBoudRatePop.enabled = self.serialPortsPop.enabled = !state;
     self.serialRefreshButton.enabled = state;
@@ -281,7 +286,7 @@
     if ([serialPort.name isEqualToString:[self.serialPortsPop selectedItem].title]) {
         self.serialPort = nil;
         self.openCloseButton.title = @"Open";
-        //将 Open button 设置为不选中状态
+        //if current uart is removed, set openBtn not select state
         [self.openCloseButton setState:NSControlStateValueOff];
     }
 }
