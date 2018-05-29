@@ -5,8 +5,9 @@
 **MINI-CNC ENGRAVING MACHUNES**
 
 Revision History
-2017-10-23 *version0.1*
-2017-10-26 *version0.2*
+2017-10-23 *version0.1*  
+
+2017-10-26 *version0.2*  
 
 ---
 
